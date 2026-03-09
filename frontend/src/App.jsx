@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import ReactMarkdown from 'react-markdown';
+import LandingPage from './LandingPage';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [selectedNode, setSelectedNode] = useState(null);
   const [chatMessage, setChatMessage] = useState("");
@@ -138,8 +140,13 @@ function App() {
     link.click();
   };
 
+  if (showLanding) {
+    return <LandingPage onEnter={() => setShowLanding(false)} />;
+  }
+
   return (
-    <div style={{ width: "100vw", height: "100vh", background: "#050505", position: "relative", overflow: "hidden", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+    <div style={{ width: "100vw", height: "100vh", background: "#050505", position: "relative", overflow: "hidden", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", animation: 'fadeInApp 0.6s ease-out' }}>
+      <style>{`@keyframes fadeInApp { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }`}</style>
 
       <ForceGraph3D
         ref={fgRef}
