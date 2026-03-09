@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ["...", "nodejs_18"]
+
+[phases.install]
+cmds = [
+  "cd frontend && npm install",
+  "cd backend && pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+  "cd frontend && VITE_API_URL= npm run build",
+  "cp -r frontend/dist backend/static"
+]
+
+[start]
+cmd = "cd backend && uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"

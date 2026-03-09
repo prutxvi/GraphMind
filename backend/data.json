@@ -1,391 +1,296 @@
 {
   "nodes": [
     {
-      "id": "Employee_1",
-      "group": "Sales",
-      "type": "Person"
+      "id": "Financial Crisis Inquiry Report",
+      "group": "Concept",
+      "type": "Report"
     },
     {
-      "id": "Employee_2",
-      "group": "Sales",
-      "type": "Person"
+      "id": "National Commission on the Causes of the Financial and Economic Crisis in the United States",
+      "group": "Organization",
+      "type": "Government Body"
     },
     {
-      "id": "Employee_3",
-      "group": "Sales",
-      "type": "Person"
+      "id": "Phil Angelides",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_4",
-      "group": "Sales",
-      "type": "Person"
+      "id": "Brooksley Born",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_5",
-      "group": "Product",
-      "type": "Person"
+      "id": "Byron Georgiou",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_6",
-      "group": "Engineering",
-      "type": "Person"
+      "id": "Bob Graham",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_7",
-      "group": "Product",
-      "type": "Person"
+      "id": "Keith Hennessey",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_8",
-      "group": "Legal",
-      "type": "Person"
+      "id": "Douglas Holtz-Eakin",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_9",
-      "group": "Legal",
-      "type": "Person"
+      "id": "Heather H. Murren",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_10",
-      "group": "Legal",
-      "type": "Person"
+      "id": "John W. Thompson",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_11",
-      "group": "Legal",
-      "type": "Person"
+      "id": "Peter J. Wallison",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_12",
-      "group": "Product",
-      "type": "Person"
+      "id": "Bill Thomas",
+      "group": "Person",
+      "type": "Commissioner"
     },
     {
-      "id": "Employee_13",
-      "group": "Product",
-      "type": "Person"
+      "id": "Shadow Banking",
+      "group": "Concept",
+      "type": "Financial System Component"
     },
     {
-      "id": "Employee_14",
-      "group": "Sales",
-      "type": "Person"
+      "id": "Securitization",
+      "group": "Concept",
+      "type": "Financial Process"
     },
     {
-      "id": "Employee_15",
-      "group": "Engineering",
-      "type": "Person"
+      "id": "Derivatives",
+      "group": "Concept",
+      "type": "Financial Instrument"
     },
     {
-      "id": "Employee_16",
-      "group": "Sales",
-      "type": "Person"
+      "id": "Deregulation",
+      "group": "Concept",
+      "type": "Policy"
     },
     {
-      "id": "Employee_17",
-      "group": "Legal",
-      "type": "Person"
+      "id": "Subprime Lending",
+      "group": "Concept",
+      "type": "Loan Practice"
     },
     {
-      "id": "Employee_18",
-      "group": "Legal",
-      "type": "Person"
+      "id": "Credit Expansion",
+      "group": "Concept",
+      "type": "Economic Phenomenon"
     },
     {
-      "id": "Employee_19",
-      "group": "Sales",
-      "type": "Person"
+      "id": "CDO Machine",
+      "group": "Concept",
+      "type": "Financial Process"
     },
     {
-      "id": "Employee_20",
-      "group": "Product",
-      "type": "Person"
+      "id": "Mortgage Machine",
+      "group": "Concept",
+      "type": "Financial Process"
     },
     {
-      "id": "Employee_21",
-      "group": "Management",
-      "type": "Person"
+      "id": "Bear Stearns",
+      "group": "Organization",
+      "type": "Financial Institution"
     },
     {
-      "id": "Employee_22",
-      "group": "Sales",
-      "type": "Person"
+      "id": "Lehman Brothers",
+      "group": "Organization",
+      "type": "Financial Institution"
     },
     {
-      "id": "Employee_23",
-      "group": "Sales",
-      "type": "Person"
+      "id": "AIG",
+      "group": "Organization",
+      "type": "Insurance Company"
     },
     {
-      "id": "Employee_24",
-      "group": "Engineering",
-      "type": "Person"
+      "id": "Fannie Mae",
+      "group": "Organization",
+      "type": "Government-Sponsored Enterprise"
     },
     {
-      "id": "Employee_25",
-      "group": "Product",
-      "type": "Person"
+      "id": "Freddie Mac",
+      "group": "Organization",
+      "type": "Government-Sponsored Enterprise"
     },
     {
-      "id": "Employee_26",
-      "group": "Legal",
-      "type": "Person"
+      "id": "January 2011",
+      "group": "Event",
+      "type": "Date"
     },
     {
-      "id": "Employee_27",
-      "group": "Sales",
-      "type": "Person"
+      "id": "Subprime Crisis",
+      "group": "Event",
+      "type": "Economic Event"
     },
     {
-      "id": "Employee_28",
-      "group": "Engineering",
-      "type": "Person"
+      "id": "Systemic Risk",
+      "group": "Concept",
+      "type": "Financial Risk"
     },
     {
-      "id": "Employee_29",
-      "group": "Engineering",
-      "type": "Person"
+      "id": "Foreclosure Crisis",
+      "group": "Event",
+      "type": "Economic Event"
     },
     {
-      "id": "Employee_30",
-      "group": "Sales",
-      "type": "Person"
+      "id": "Dissenting Views",
+      "group": "Concept",
+      "type": "Report Section"
     },
     {
-      "id": "Project Alpha",
-      "group": "Project",
-      "type": "Project"
+      "id": "Glossary",
+      "group": "Concept",
+      "type": "Report Appendix"
     },
     {
-      "id": "Project Titan",
-      "group": "Project",
-      "type": "Project"
-    },
-    {
-      "id": "Project Apollo",
-      "group": "Project",
-      "type": "Project"
-    },
-    {
-      "id": "Project X",
-      "group": "Project",
-      "type": "Project"
-    },
-    {
-      "id": "NDA_Agreement",
-      "group": "Document",
-      "type": "Document"
-    },
-    {
-      "id": "Remote_Work_Policy",
-      "group": "Document",
-      "type": "Document"
-    },
-    {
-      "id": "Q4_Financials",
-      "group": "Document",
-      "type": "Document"
-    },
-    {
-      "id": "API_Spec_v2",
-      "group": "Document",
-      "type": "Document"
+      "id": "ISBN 978-0-16-087727-8",
+      "group": "Property",
+      "type": "Identifier"
     }
   ],
   "links": [
     {
-      "source": "Employee_1",
-      "target": "Project Apollo",
-      "value": "works_on"
+      "source": "Financial Crisis Inquiry Report",
+      "target": "National Commission on the Causes of the Financial and Economic Crisis in the United States",
+      "value": "authored_by"
     },
     {
-      "source": "Employee_2",
-      "target": "Project X",
-      "value": "works_on"
+      "source": "Phil Angelides",
+      "target": "Financial Crisis Inquiry Report",
+      "value": "commissioner_of"
     },
     {
-      "source": "Employee_3",
-      "target": "Project Apollo",
-      "value": "works_on"
+      "source": "Brooksley Born",
+      "target": "Financial Crisis Inquiry Report",
+      "value": "commissioner_of"
     },
     {
-      "source": "Employee_4",
-      "target": "Project Apollo",
-      "value": "works_on"
+      "source": "Byron Georgiou",
+      "target": "Financial Crisis Inquiry Report",
+      "value": "commissioner_of"
     },
     {
-      "source": "Employee_5",
-      "target": "Project X",
-      "value": "works_on"
+      "source": "Bob Graham",
+      "target": "Financial Crisis Inquiry Report",
+      "value": "commissioner_of"
     },
     {
-      "source": "Employee_1",
-      "target": "Employee_5",
-      "value": "manages"
+      "source": "Keith Hennessey",
+      "target": "Dissenting Views",
+      "value": "authored_by"
     },
     {
-      "source": "Employee_6",
-      "target": "Project Titan",
-      "value": "works_on"
+      "source": "Douglas Holtz-Eakin",
+      "target": "Dissenting Views",
+      "value": "authored_by"
     },
     {
-      "source": "Employee_1",
-      "target": "Employee_6",
-      "value": "manages"
+      "source": "Bill Thomas",
+      "target": "Dissenting Views",
+      "value": "authored_by"
     },
     {
-      "source": "Employee_7",
-      "target": "Project X",
-      "value": "works_on"
+      "source": "Peter J. Wallison",
+      "target": "Dissenting Views",
+      "value": "authored_by"
     },
     {
-      "source": "Employee_8",
-      "target": "Project X",
-      "value": "works_on"
+      "source": "Financial Crisis Inquiry Report",
+      "target": "Shadow Banking",
+      "value": "examines"
     },
     {
-      "source": "Employee_9",
-      "target": "Project Alpha",
-      "value": "works_on"
+      "source": "Financial Crisis Inquiry Report",
+      "target": "Securitization",
+      "value": "examines"
     },
     {
-      "source": "Employee_1",
-      "target": "Employee_9",
-      "value": "manages"
+      "source": "Financial Crisis Inquiry Report",
+      "target": "Derivatives",
+      "value": "examines"
     },
     {
-      "source": "Employee_10",
-      "target": "Project Apollo",
-      "value": "works_on"
+      "source": "Financial Crisis Inquiry Report",
+      "target": "Deregulation",
+      "value": "examines"
     },
     {
-      "source": "Employee_11",
-      "target": "Project Apollo",
-      "value": "works_on"
+      "source": "Financial Crisis Inquiry Report",
+      "target": "Subprime Lending",
+      "value": "examines"
     },
     {
-      "source": "Employee_12",
-      "target": "Project Titan",
-      "value": "works_on"
+      "source": "Subprime Lending",
+      "target": "Subprime Crisis",
+      "value": "causes"
     },
     {
-      "source": "Employee_13",
-      "target": "Project Apollo",
-      "value": "works_on"
+      "source": "Securitization",
+      "target": "CDO Machine",
+      "value": "related_to"
     },
     {
-      "source": "Employee_14",
-      "target": "Project Alpha",
-      "value": "works_on"
+      "source": "CDO Machine",
+      "target": "Systemic Risk",
+      "value": "contributes_to"
     },
     {
-      "source": "Employee_15",
-      "target": "Project Titan",
-      "value": "works_on"
+      "source": "Mortgage Machine",
+      "target": "Subprime Lending",
+      "value": "enables"
     },
     {
-      "source": "Employee_16",
-      "target": "Project Titan",
-      "value": "works_on"
+      "source": "Bear Stearns",
+      "target": "Subprime Crisis",
+      "value": "affected_by"
     },
     {
-      "source": "Employee_17",
-      "target": "Project Titan",
-      "value": "works_on"
+      "source": "Lehman Brothers",
+      "target": "Subprime Crisis",
+      "value": "affected_by"
     },
     {
-      "source": "Employee_1",
-      "target": "Employee_17",
-      "value": "manages"
+      "source": "AIG",
+      "target": "Subprime Crisis",
+      "value": "affected_by"
     },
     {
-      "source": "Employee_18",
-      "target": "Project Apollo",
-      "value": "works_on"
+      "source": "Fannie Mae",
+      "target": "Subprime Crisis",
+      "value": "involved_in"
     },
     {
-      "source": "Employee_19",
-      "target": "Project Apollo",
-      "value": "works_on"
+      "source": "Freddie Mac",
+      "target": "Subprime Crisis",
+      "value": "involved_in"
     },
     {
-      "source": "Employee_20",
-      "target": "Project Apollo",
-      "value": "works_on"
+      "source": "Financial Crisis Inquiry Report",
+      "target": "January 2011",
+      "value": "published_in"
     },
     {
-      "source": "Employee_1",
-      "target": "Employee_20",
-      "value": "manages"
+      "source": "Financial Crisis Inquiry Report",
+      "target": "Glossary",
+      "value": "contains"
     },
     {
-      "source": "Employee_21",
-      "target": "Project Apollo",
-      "value": "works_on"
-    },
-    {
-      "source": "Employee_22",
-      "target": "Project Titan",
-      "value": "works_on"
-    },
-    {
-      "source": "Employee_23",
-      "target": "Project Titan",
-      "value": "works_on"
-    },
-    {
-      "source": "Employee_24",
-      "target": "Project X",
-      "value": "works_on"
-    },
-    {
-      "source": "Employee_1",
-      "target": "Employee_24",
-      "value": "manages"
-    },
-    {
-      "source": "Employee_25",
-      "target": "Project Alpha",
-      "value": "works_on"
-    },
-    {
-      "source": "Employee_26",
-      "target": "Project Apollo",
-      "value": "works_on"
-    },
-    {
-      "source": "Employee_27",
-      "target": "Project Alpha",
-      "value": "works_on"
-    },
-    {
-      "source": "Employee_28",
-      "target": "Project Alpha",
-      "value": "works_on"
-    },
-    {
-      "source": "Employee_1",
-      "target": "Employee_28",
-      "value": "manages"
-    },
-    {
-      "source": "Employee_29",
-      "target": "Project Alpha",
-      "value": "works_on"
-    },
-    {
-      "source": "Employee_30",
-      "target": "Project Alpha",
-      "value": "works_on"
-    },
-    {
-      "source": "Project Titan",
-      "target": "NDA_Agreement",
-      "value": "requires_signed"
-    },
-    {
-      "source": "Employee_1",
-      "target": "NDA_Agreement",
-      "value": "has_signed"
+      "source": "Financial Crisis Inquiry Report",
+      "target": "ISBN 978-0-16-087727-8",
+      "value": "has_identifier"
     }
   ]
 }
