@@ -12,13 +12,13 @@ from openai import OpenAI
 from pypdf import PdfReader
 
 load_dotenv()
-api_key = os.getenv("NVIDIA_API_KEY")
+api_key = os.getenv("SARVAM_API_KEY")
 
 if not api_key:
-    print("⚠️ WARNING: NVIDIA_API_KEY not found in .env file!")
+    print("⚠️ WARNING: SARVAM_API_KEY not found in .env file!")
 
 client = OpenAI(
-    base_url="https://integrate.api.nvidia.com/v1",
+    base_url="https://api.sarvam.ai/v2",
     api_key=api_key
 )
 
@@ -162,7 +162,7 @@ async def chat_with_graph(request: Request):
 
     try:
         completion = client.chat.completions.create(
-            model="nvidia/llama-3.3-nemotron-super-49b-v1.5",
+            model="gemma4",
             messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
             temperature=0.6,
             max_tokens=300
@@ -225,7 +225,7 @@ JSON format:
             try:
                 print(f"🔄 Attempt {attempt + 1}/{max_retries}...")
                 completion = client.chat.completions.create(
-                    model="nvidia/llama-3.3-nemotron-super-49b-v1.5",
+                    model="gemma4",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": f"Output ONLY JSON. Extract 25-50 nodes from:\n\n{text[:6000]}"}
@@ -383,7 +383,7 @@ def analyze_graph():
     ai_summary = ""
     try:
         completion = client.chat.completions.create(
-            model="nvidia/llama-3.3-nemotron-super-49b-v1.5",
+            model="gemma4",
             messages=[
                 {"role": "system", "content": "You are GraphMind AI Analyst. Given knowledge graph statistics, provide a brief, insightful analysis in 4-6 bullet points using markdown. Highlight: key themes, important hub concepts, knowledge gaps (isolated nodes), and interesting patterns. Be concise and smart."},
                 {"role": "user", "content": analysis_context}
