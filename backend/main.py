@@ -124,7 +124,8 @@ def create_app(cfg: Settings = default_settings, llm: LLM | None = None, store: 
         if llm is None:
             raise HTTPException(503, "Questions are disabled: no LLM configured on the server.")
         try:
-            return answer(llm, store, report, indexes, req.message)
+            model = llm.with_session(f"footnote-chat-{filing_id}") if hasattr(llm, "with_session") else llm
+            return answer(model, store, report, indexes, req.message)
         except LLMError as exc:
             raise HTTPException(502, str(exc)) from exc
 

@@ -30,11 +30,17 @@ def strip_thinking(text: str) -> tuple[str, str]:
 class OpenAICompatibleLLM:
     """Any OpenAI-compatible chat endpoint."""
 
-    def __init__(self, api_key: str | None, base_url: str, model: str, timeout: float = 90.0):
+    def __init__(self, api_key: str | None, base_url: str, model: str, timeout: float = 120.0, session: str = "footnote"):
         if not api_key:
             raise LLMError("No LLM API key configured. Set LLM_API_KEY in backend/.env.")
-        self._client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
+        self._args = (api_key, base_url, model, timeout)
+        # opencode's gateway routes and caches by a stable per-conversation session id; other providers ignore it.
+        self._client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout,
+                              default_headers={"x-opencode-session": session})
         self._model = model
+
+    def with_session(self, session: str) -> "OpenAICompatibleLLM":
+        return OpenAICompatibleLLM(*self._args, session=session)
 
     def complete(self, system: str, user: str, *, temperature: float = 0.2, max_tokens: int = 1024) -> str:
         try:

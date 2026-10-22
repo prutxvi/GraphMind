@@ -5,6 +5,7 @@ import { Link } from '../router';
 import { SEVERITY_LABEL } from '../context';
 import { Cite, Icon, Skeleton, Verified } from '../ui';
 
+const money = (r) => (r >= 1e7 ? `₹${(r / 1e7).toFixed(2)} Cr` : `₹${(r / 1e5).toFixed(1)} lakh`);
 const titleCase = (s) => (s || '').replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
 
 function Excerpt({ filingId, c }) {
@@ -42,9 +43,9 @@ function SourcePanel({ data, selected }) {
   } else if (selected?.type === 'edge') {
     const e = graph.edges.find((x) => x.id === selected.id);
     if (e) {
-      kicker = e.kind === 'money' ? 'Money between related parties' : 'Connection';
+      kicker = e.kind === 'money' ? 'Money between related parties' : e.kind === 'pay' ? 'Pay to a related person' : 'Connection';
       title = `${nodeName(e.source)} → ${nodeName(e.target)}`;
-      sub = e.kind === 'money' ? `${e.natures.join(', ') || 'Transactions'} · ${e.label}` : titleCase(e.label);
+      sub = e.kind === 'money' || e.kind === 'pay' ? `${e.natures.join(', ') || 'Transactions'} · ${money(e.amount)}` : titleCase(e.label);
       citations = e.citations;
     }
   } else if (selected?.type === 'node') {
@@ -320,7 +321,7 @@ export default function Filing({ id, health }) {
           </div>
           <div className="legend">
             <span><i className="sw person" />Person</span><span><i className="sw" />Company</span>
-            <span><i className="sw adviser" />Banker, auditor or adviser</span><span><i className="sw money" />Money, thicker = larger</span>
+            <span><i className="sw adviser" />Banker, auditor or adviser</span><span><i className="sw money" />Business money, thicker = larger</span>
           </div>
         </div>
         <SourcePanel data={data} selected={selected} />

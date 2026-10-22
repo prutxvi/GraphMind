@@ -86,6 +86,8 @@ function layout(graph, compact) {
     const a = pos.get(e.source);
     const b = pos.get(e.target);
     if (!a || !b) continue;
+    // On a phone the director-to-company lines cross every box; the lists still show them.
+    if (compact && e.kind === 'directorship') continue;
     const anchor = (p, toward) => {
       if (p.side === 'left') return [p.x + p.w, p.y + p.h / 2];
       if (p.side === 'right') return [p.x, p.y + p.h / 2];

@@ -13,6 +13,7 @@ from .config import Settings
 from .store import Store, norm_org
 
 TRADE = re.compile(r"sale|purchase|service|rent|lease|job ?work|contract|commission|consult|royalt|freight|supply", re.I)
+PAY = re.compile(r"salary|remuneration|sitting fee|commission to director|bonus|perquisite|gratuity|reimbursement", re.I)
 LOAN_GIVEN = re.compile(r"loan[s]? (given|granted|advanced)|advance[s]? (given|paid)(?! back)|inter[- ]?corporate deposit given|loan to", re.I)
 SEVERITY_ORDER = {"high": 0, "medium": 1, "info": 2, "ok": 3}
 ROLE_LABEL = {
@@ -170,15 +171,25 @@ class FilingReport:
 
         out.extend(self.lead_manager_flags())
 
-        pat, cfo = self.metric("profit_after_tax"), self.metric("net_cash_from_operating_activities")
-        if pat and cfo and (pat["amount"] or 0) > 0 and (cfo["amount"] or 0) < 0:
+        # A profitable year whose operations used a meaningful amount of cash (at least 10% of that profit).
+        years = []
+        for cfo in self.by_kind["financial"]:
+            if cfo["attrs"].get("metric") != "net_cash_from_operating_activities" or (cfo["amount"] or 0) >= 0:
+                continue
+            pat = next((p for p in self.by_kind["financial"] if p["attrs"].get("metric") == "profit_after_tax"
+                        and p["attrs"].get("fiscal") == cfo["attrs"].get("fiscal")), None)
+            if pat and (pat["amount"] or 0) > 0 and -cfo["amount"] >= 0.1 * pat["amount"]:
+                years.append((pat, cfo))
+        if years:
+            pat, cfo = max(years, key=lambda y: -y[1]["amount"])
+            fy = cfo["attrs"].get("fiscal", "a recent year")
             out.append({
                 "id": "cash_vs_profit", "severity": "medium", "label": "Profit without cash",
                 "value": money(cfo["amount"]),
-                "detail": f"Reported a profit of {money(pat['amount'])} but operations used {money(-cfo['amount'])} "
-                          f"of cash in {cfo['attrs'].get('fiscal', 'the latest year')}.",
-                "headline": f"{c} reported a profit, but its operations burned {money(-cfo['amount'])} of cash.",
-                "citations": [_cite(pat), _cite(cfo)], "entities": [],
+                "detail": f"Reported a profit of {money(pat['amount'])} in {fy} while operations used {money(-cfo['amount'])} "
+                          f"of cash." + (f" Happened in {len(years)} of the years shown." if len(years) > 1 else ""),
+                "headline": f"{c} reported a {money(pat['amount'])} profit in {fy}, but its operations used {money(-cfo['amount'])} of cash.",
+                "citations": [_cite(x) for y in years for x in y], "entities": [],
             })
 
         return sorted(out, key=lambda f: SEVERITY_ORDER[f["severity"]])
@@ -268,7 +279,8 @@ class FilingReport:
             elif k == "rpt":
                 kind = self.entities.get(s, {}).get("kind")
                 node(s, "Related party", "right" if kind == "org" else "left")
-                edge(s, o, "money", "", f, f["amount"])
+                # Salaries and sitting fees are ordinary pay; red lines are kept for business money.
+                edge(s, o, "pay" if PAY.search(a.get("nature") or "") else "money", "", f, f["amount"])
             elif k == "proceeds_to_related":
                 node(s, "Receives IPO money", "right")
                 edge(o, s, "proceeds", "IPO money", f, f["amount"])
@@ -283,6 +295,8 @@ class FilingReport:
         for e in edges.values():
             if e["kind"] == "money":
                 e["label"] = money(e["amount"])
+            elif e["kind"] == "pay":
+                e["label"] = f"paid {money(e['amount'])}"
         return {"nodes": list(nodes.values()), "edges": list(edges.values()), "issuer": self.issuer_id}
 
     # -- lists -----------------------------------------------------------------
@@ -297,7 +311,10 @@ class FilingReport:
             role = "Promoter" if f["kind"] == "promoter" else (f["attrs"].get("designation") or "Director")
             if f["kind"] == "promoter" and f["attrs"].get("shareholding_pct"):
                 role += f" · {f['attrs']['shareholding_pct']:g}%"
-            if role not in p["roles"]:
+            # Committee tables list "Member"/"Chairperson"; those are not positions in the company.
+            if re.fullmatch(r"(member|chair(man|person|woman)?)", role.strip(), re.I):
+                continue
+            if role.casefold() not in {r.casefold() for r in p["roles"]}:
                 p["roles"].append(role)
             p["citations"].append(_cite(f))
         money_rows = [{
@@ -305,8 +322,16 @@ class FilingReport:
             "relationship": f["attrs"].get("relationship"), "amount": f["amount"], "amount_label": money(f["amount"]),
             "pct_of_revenue": f["attrs"].get("pct_of_revenue"), "fiscal": f["attrs"].get("fiscal"), **_cite(f),
         } for f in sorted(self.by_kind["rpt"], key=lambda f: -(f["amount"] or 0))]
-        advisers = [{"id": f["subject_id"], "name": self.name(f["subject_id"]), "role": ROLE_LABEL.get(f["attrs"].get("role"), "Adviser"),
-                     "registration": f["attrs"].get("registration"), **_cite(f)} for f in self.by_kind["intermediary"]]
+        advisers: dict[tuple, dict] = {}
+        for f in self.by_kind["intermediary"]:
+            key = (f["subject_id"], f["attrs"].get("role"))
+            row = advisers.get(key)
+            # Keep one row per firm and role, preferring the mention that carries a registration number.
+            if row is None or (not row["registration"] and f["attrs"].get("registration")):
+                advisers[key] = {"id": f["subject_id"], "name": self.name(f["subject_id"]),
+                                 "role": ROLE_LABEL.get(f["attrs"].get("role"), "Adviser"),
+                                 "registration": f["attrs"].get("registration"), **_cite(f)}
+        advisers = list(advisers.values())
         litigation = [{**f["attrs"], "amount_label": money(f["amount"]) if f["amount"] else None, **_cite(f)}
                       for f in self.by_kind["litigation"]]
         objects = [{"purpose": f["attrs"].get("purpose"), "amount_label": money(f["amount"]) if f["amount"] else "To be decided",

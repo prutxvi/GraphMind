@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS facts (
     id INTEGER PRIMARY KEY AUTOINCREMENT, filing_id TEXT, kind TEXT,
     subject_id INTEGER, object_id INTEGER, attrs TEXT, amount REAL,
     page INTEGER, quote TEXT, verified INTEGER, section TEXT);
+CREATE TABLE IF NOT EXISTS extractions (
+    filing_id TEXT, section TEXT, first_page INTEGER, last_page INTEGER, data TEXT, error TEXT);
 CREATE INDEX IF NOT EXISTS facts_filing ON facts(filing_id);
 CREATE INDEX IF NOT EXISTS facts_subject ON facts(subject_id);
 CREATE INDEX IF NOT EXISTS facts_object ON facts(object_id);
@@ -31,7 +33,9 @@ _HONORIFIC = re.compile(r"^(mr|mrs|ms|miss|dr|shri|smt|sri|kumari|late)\.?\s+", 
 _ORG_HINT = re.compile(
     r"\b(limited|ltd|llp|private|pvt|corporation|corp|company|co\.|industries|enterprises|traders|trading|associates|"
     r"huf|trust|bank|foundation|ventures|holdings|capital|securities|technologies|infra|projects|services|solutions|"
-    r"partners|firm|exports|agro|pipes|machines|systems)\b",
+    r"partners|firm|exports|agro|pipes|machines|systems|cargo|courier|logistics|travels?|transport|motors|"
+    r"constructions?|builders|developers|realty|foods|textiles|chemicals|pharma|steels?|power|energy|finance|"
+    r"investments?|consultants|agencies|agency|stores|mills|works|global|international|group)\b",
     re.IGNORECASE,
 )
 
@@ -114,9 +118,33 @@ class Store:
             rows = self._db.execute("SELECT * FROM filings ORDER BY created_at DESC").fetchall()
         return [self._filing(r) for r in rows]
 
+    def clear_facts(self, filing_id: str) -> None:
+        with self._lock:
+            self._db.execute("DELETE FROM facts WHERE filing_id = ?", (filing_id,))
+            self._db.execute("DELETE FROM entity_keys WHERE key LIKE ?", (f"pname:{filing_id}:%",))
+            self._db.commit()
+
+    def save_extractions(self, filing_id: str, rows: list[tuple]) -> None:
+        with self._lock:
+            self._db.execute("DELETE FROM extractions WHERE filing_id = ?", (filing_id,))
+            self._db.executemany("INSERT INTO extractions VALUES (?, ?, ?, ?, ?, ?)",
+                                 [(filing_id, s, a, b, json.dumps(d), e) for s, a, b, d, e in rows])
+            self._db.commit()
+
+    def extractions(self, filing_id: str) -> list[dict]:
+        with self._lock:
+            rows = self._db.execute("SELECT * FROM extractions WHERE filing_id = ? ORDER BY first_page", (filing_id,)).fetchall()
+        return [{**dict(r), "data": json.loads(r["data"] or "{}")} for r in rows]
+
+    def all_pages(self, filing_id: str) -> list[str]:
+        with self._lock:
+            rows = self._db.execute("SELECT text FROM pages WHERE filing_id = ? ORDER BY number", (filing_id,)).fetchall()
+        return [r["text"] for r in rows]
+
     def clear_filing_data(self, filing_id: str) -> None:
         with self._lock:
             self._db.execute("DELETE FROM facts WHERE filing_id = ?", (filing_id,))
+            self._db.execute("DELETE FROM extractions WHERE filing_id = ?", (filing_id,))
             self._db.execute("DELETE FROM pages WHERE filing_id = ?", (filing_id,))
             self._db.execute("DELETE FROM entity_keys WHERE key LIKE ?", (f"pname:{filing_id}:%",))
             self._db.commit()

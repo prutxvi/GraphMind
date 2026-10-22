@@ -127,7 +127,7 @@ class FakeLLM:
         self.canned = canned
         self.calls = 0
 
-    def complete(self, system, user, *, temperature=0.2, max_tokens=1024):
+    def complete(self, system, user, *, temperature=0.2, max_tokens=1024, **_):
         self.calls += 1
         if user.startswith("Company:"):
             return "The filing lists a lead manager [S1]. Also [S99]."

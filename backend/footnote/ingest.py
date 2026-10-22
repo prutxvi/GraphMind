@@ -1,6 +1,7 @@
 """Filing -> sections -> extraction -> verified facts in the store.
 
     python -m footnote.ingest path/to/filing.pdf [more.pdf ...]
+    python -m footnote.ingest --relink [filing-id ...]   # re-link from saved extraction, no model calls
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ import time
 from pathlib import Path
 
 from .config import Settings, settings as default_settings
-from .extract import Result, build_jobs, run_jobs, to_number, to_rupees
+from .extract import Job, Result, build_jobs, run_jobs, to_number, to_rupees
 from .llm import LLM, OpenAICompatibleLLM
 from .pdftext import locate_sections, read_pages, related_party_note
 from .store import Store, looks_like_org
@@ -56,10 +57,19 @@ def verify(quote: str | None, page: int | None, pages: list[str], lo: int, hi: i
     Comparison ignores spacing/punctuation because PDF tables extract with irregular whitespace."""
     if not isinstance(page, int) or not lo <= page <= hi:
         page = None
+    order = [p for p in (page, *(range(lo, hi + 1))) if p]
+    # Models shorten long rows with "..."; accept the quote when every part is on the same page.
+    parts = [_alnum(x) for x in re.split(r"\.\.\.|…|;\s", quote or "")]
+    parts = [x for x in parts if len(x) >= 6]
+    if len(parts) > 1:
+        for number in dict.fromkeys(order):
+            text = _alnum(pages[number - 1])
+            if all(x in text for x in parts):
+                return number, True
+        return page, False
     needle = _alnum(quote or "")
     if len(needle) < 10:
         return page, False
-    order = [p for p in (page, *(range(lo, hi + 1))) if p]
     for number in dict.fromkeys(order):
         if needle in _alnum(pages[number - 1]):
             return number, True
@@ -87,6 +97,7 @@ class Normaliser:
         self.facts: list[dict] = []
         self.issuer_id: int | None = None
         self.din_by_name: dict[str, str] = {}
+        self._objects_seen = False
 
     def entity(self, name: str, kind: str | None = None, **ids) -> int | None:
         name = (name or "").strip()
@@ -176,8 +187,14 @@ class Normaliser:
         for t in r.data.get("transactions") or []:
             if not isinstance(t, dict) or not t.get("party"):
                 continue
-            kind = "org" if looks_like_org(t["party"]) else "person"
-            pid = self.entity(t["party"], kind)
+            party, nature = t["party"].strip(), t.get("nature")
+            # "Opticon Pipes Private Limited (Services)" is the same company; the bracket describes the transaction.
+            m = re.match(r"^(.*?)\s*\(([^)]+)\)$", party)
+            if m and m.group(2).strip().upper() not in ("HUF", "LLP", "INDIA", "P", "PVT"):
+                party, nature = m.group(1), f"{nature} ({m.group(2).strip()})" if nature else m.group(2).strip()
+            t = {**t, "nature": nature}
+            kind = "org" if looks_like_org(party) else "person"
+            pid = self.entity(party, kind)
             amount = to_rupees(t.get("amount"), unit)
             if pid and pid != self.issuer_id and amount:
                 self.fact(r, t, "rpt", pid, self.issuer_id, amount, nature=t.get("nature"),
@@ -196,7 +213,10 @@ class Normaliser:
 
     def objects(self, r: Result) -> None:
         unit = r.data.get("unit")
-        for o in r.data.get("objects") or []:
+        # The first page of "Objects of the Issue" carries the summary table; later pages restate it in detail.
+        first = not self._objects_seen
+        self._objects_seen = True
+        for o in (r.data.get("objects") or []) if first else []:
             if isinstance(o, dict) and o.get("purpose"):
                 self.fact(r, o, "object", None, self.issuer_id, to_rupees(o.get("amount"), unit), purpose=o.get("purpose"))
         for p in r.data.get("related_party_payments") or []:
@@ -267,10 +287,13 @@ class Ingestor:
                          message=f"Read {SECTION_LABEL.get(result.job.section, result.job.section)}"
                                  f" (pages {result.job.first_page}-{result.job.last_page})")
 
-            results = run_jobs(self.llm, jobs, self.cfg.extract_workers, on_done)
+            llm = self.llm.with_session(f"footnote-{filing_id}") if hasattr(self.llm, "with_session") else self.llm
+            results = run_jobs(llm, jobs, self.cfg.extract_workers, on_done)
             failed = [r for r in results if r.error]
             if len(failed) == len(results):
                 raise RuntimeError(f"The model could not read this filing ({failed[0].error}).")
+            self.store.save_extractions(filing_id, [(r.job.section, r.job.first_page, r.job.last_page, r.data, r.error)
+                                                    for r in results])
 
             push(stage="linking", message="Linking people, companies and money")
             norm = Normaliser(self.store, filing_id, pages)
@@ -295,6 +318,23 @@ class Ingestor:
             self.store.update_filing(filing_id, status="error", progress={**progress, "stage": "error", "message": str(exc)})
 
 
+def relink(store: Store, filing_id: str) -> int:
+    """Rebuild a filing's facts from its saved extraction, without calling the model again."""
+    pages = store.all_pages(filing_id)
+    results = [Result(Job(e["section"], e["first_page"], e["last_page"], ""), e["data"], e["error"])
+               for e in store.extractions(filing_id)]
+    if not results:
+        raise ValueError(f"{filing_id} has no saved extraction; ingest it again.")
+    store.clear_facts(filing_id)
+    norm = Normaliser(store, filing_id, pages)
+    norm.run(results)
+    store.add_facts(norm.facts)
+    filing = store.filing(filing_id)
+    meta = {**filing["meta"], "facts": len(norm.facts), "verified": sum(f["verified"] for f in norm.facts)}
+    store.update_filing(filing_id, meta=meta, issuer_id=norm.issuer_id, company=store.entity(norm.issuer_id)["name"])
+    return len(norm.facts)
+
+
 def _doc_type(pages: list[str]) -> str:
     head = " ".join(pages[:3]).upper()
     for label, pattern in (("DRHP", "DRAFT RED HERRING"), ("RHP", "RED HERRING PROSPECTUS"), ("Prospectus", "PROSPECTUS")):
@@ -310,6 +350,10 @@ def main(argv: list[str]) -> int:
         return 2
     cfg = default_settings
     store = Store(cfg.db_path)
+    if argv[0] == "--relink":
+        for filing_id in argv[1:] or [f["id"] for f in store.filings() if f["status"] == "ready"]:
+            print(f"{filing_id}: {relink(store, filing_id)} facts")
+        return 0
     ingestor = Ingestor(store, OpenAICompatibleLLM(cfg.llm_api_key, cfg.llm_base_url, cfg.llm_model), cfg)
     for path in argv:
         filing_id = ingestor.add_pdf(Path(path))
