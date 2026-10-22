@@ -203,10 +203,14 @@ GraphMind/                        (repo rename to footnote pending)
 │   ├── sebi_orders.example.json  format for the hand-checked order list
 │   └── filings/                  local PDFs (git-ignored)
 ├── screenshots/                  the images above, captured from the running app
-├── docs/                         the filing test, red-flag rules, architecture
+├── docs/
+│   ├── real-filing-test.md       the Annu Projects run, checked by hand
+│   ├── red-flag-rules.md         every rule, its threshold and its severity
+│   ├── data-model.md             SQLite tables, fact kinds, DIN/CIN matching
+│   └── architecture.md           pipeline, module map, API, deploy shape
 ├── .github/workflows/ci.yml      backend tests + frontend lint and build
 ├── railway.json, nixpacks.toml   one-service deploy
-└── LICENSE, CONTRIBUTING.md, CHANGELOG.md
+└── LICENSE, CONTRIBUTING.md, CHANGELOG.md, THIRD-PARTY-NOTICES.md
 ```
 
 ## 🔌 API
@@ -273,7 +277,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Run `pytest` in `backend/` and `npm run 
 
 ## 📄 License
 
-MIT © 2026 Toganti Pruthvi Raj — see [LICENSE](LICENSE).
+MIT © 2026 Toganti Pruthvi Raj — see [LICENSE](LICENSE). Third-party licences, including the
+fonts and pdf.js, are listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 ---
 
