@@ -1,4 +1,4 @@
-"""TF-IDF retrieval over graph nodes and source pages (no external embedding API needed)."""
+"""Small TF-IDF index for retrieving facts and pages (no external embedding API needed)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ import math
 import re
 from collections import Counter
 
-from .graph import KnowledgeGraph
 
 _STOP = set(
     "a an and are as at be by did do does for from has have how i in is it its me of on or tell that the this to "
@@ -50,27 +49,3 @@ class TfidfIndex:
         scores = [s for s in scores if s[1] > 0]
         scores.sort(key=lambda s: s[1], reverse=True)
         return scores[:k]
-
-
-class GraphRetriever:
-    def __init__(self, kg: KnowledgeGraph):
-        self.kg = kg
-        self.nodes = TfidfIndex(
-            {
-                n.id: " ".join([n.id, n.id, *n.aliases, n.type, n.group, n.description])  # name counted twice
-                for n in kg.nodes.values()
-            }
-        )
-        self.pages = TfidfIndex({str(p.number): p.text for p in kg.pages})
-
-    def find_nodes(self, query: str, k: int = 3) -> list[str]:
-        hits = dict(self.nodes.search(query, k * 3))
-        # An entity named verbatim in the question outranks a merely similar one.
-        q = query.casefold()
-        for node in self.kg.nodes.values():
-            if any(len(t) >= 3 and re.search(rf"(?<!\w){re.escape(t.casefold())}(?!\w)", q) for t in [node.id, *node.aliases]):
-                hits[node.id] = hits.get(node.id, 0.0) + 1.0
-        return [node_id for node_id, _ in sorted(hits.items(), key=lambda h: h[1], reverse=True)[:k]]
-
-    def find_pages(self, query: str, k: int = 2) -> list[int]:
-        return [int(page_id) for page_id, _ in self.pages.search(query, k)]

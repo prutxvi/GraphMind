@@ -28,11 +28,11 @@ def strip_thinking(text: str) -> tuple[str, str]:
 
 
 class OpenAICompatibleLLM:
-    """Any OpenAI-compatible chat endpoint (Sarvam by default)."""
+    """Any OpenAI-compatible chat endpoint."""
 
     def __init__(self, api_key: str | None, base_url: str, model: str, timeout: float = 90.0):
         if not api_key:
-            raise LLMError("No LLM API key configured. Set SARVAM_API_KEY in backend/.env.")
+            raise LLMError("No LLM API key configured. Set LLM_API_KEY in backend/.env.")
         self._client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout)
         self._model = model
 

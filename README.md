@@ -1,73 +1,67 @@
-# 🧠 GraphMind
+# Footnote¹
 
-**Turn a PDF into a 3D knowledge graph you can question, where every answer is cited back to a page.**
+**What IPOs bury in the fine print, with the page to prove it.**
 
-Upload a report, paper or policy document. GraphMind reads every page, extracts the people, organisations, concepts and events in it, merges duplicates, and draws the result as an interactive 3D graph. Ask a question and the answer comes from graph facts and the source text, with `[S1] · p.12` citations you can click.
+An Indian IPO filing (DRHP, RHP or prospectus) runs 300 to 800 pages. Who owns the company, which family companies it does business with, who its bankers are, and which cases it is fighting are all disclosed, but scattered across sections almost nobody reads.
+
+Footnote reads the filing, maps **who is connected to the company and where the money goes**, runs fixed checks over what it finds, and links every line to the page of the PDF it came from, with the quote highlighted.
+
+## What you get for each filing
+
+- **A one-line headline** written from the strongest finding, e.g. *"Acme Agro did ₹36.00 Cr of business with its own related companies in Fiscal 2026, 15% of its revenue."*
+- **Red flags from fixed rules**, not AI opinions: related-party business as a share of revenue, money lent to related parties, IPO money going to related parties, auditor resignations, pending criminal or regulatory cases, the lead manager's record across filings and SEBI orders, and profit without operating cash.
+- **A connection map**: promoters and directors on the left, group and related companies on the right, bankers and auditors on top, and money drawn in red with thickness by amount.
+- **The source, always**: click any flag, line, box or page number and the real PDF page opens with the quote highlighted. Quotes are checked word for word; anything not found is marked unverified.
+- **People and companies across IPOs**: people are linked only by DIN, companies by CIN, SEBI or firm registration, so "everywhere this banker appears" is one click.
+- **Questions with citations**: answers use only the filing and cite `S1 · p.73`-style sources.
 
 ## How it works
 
 ```
-PDF ──► pages ──► page-aware chunks ──► LLM extraction (parallel, per chunk)
-                                              │
-                    merge entities by name + aliases ("Federal Reserve" = "the Fed")
-                    pages per entity = where its name actually appears in the text
-                    each relation keeps a quote, verified verbatim against the PDF
-                                              │
-question ──► TF-IDF over entities + pages ──► facts + passages as numbered sources
-                                              │
-                                    LLM answers citing [S#] ──► page citations
+PDF ──► table of contents ──► ~10 sections that matter (≈60 of 460 pages)
+            │
+            ▼
+   fixed-field extraction per section (LLM), each item with a verbatim quote
+            │
+            ▼
+   quote verified against the page ─► entities matched by DIN / CIN / SEBI reg ─► SQLite
+            │
+            ▼
+   rule-based flags · headline · connection map · cited Q&A
 ```
 
-What makes it more than "send a PDF to a chatbot":
+A 462-page RHP takes about 22 model calls (roughly 40K input tokens). PAN, Aadhaar and home addresses are scrubbed from everything stored, even though filings print them.
 
-- **Whole-document extraction.** Every page is processed in ~5,000-character chunks, not just the first few thousand characters. Limits are explicit and reported back (`MAX_PAGES`, `MAX_CHUNKS`).
-- **Entity resolution across chunks.** The same entity mentioned on page 3 and page 40 becomes one node. Only proper-noun aliases are trusted to merge, so a stray "bank" alias can't glue two banks together.
-- **Provenance you can check.** A node's page list comes from searching the text, not from the model. Relation quotes are checked against the source and marked `verified: false` if the model invented them.
-- **Grounded chat.** Answers may only use the numbered sources, and citations to sources that don't exist are dropped.
-- **Per-upload graphs.** Each upload gets its own unguessable ID, so two users never overwrite each other.
+## Run it
 
-## Quick start
-
-Requires Python 3.10+ and Node 18+.
+Requires Python 3.10+ and Node 20+.
 
 ```bash
 # Backend
 cd backend
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env          # add your SARVAM_API_KEY
-uvicorn main:app --reload     # http://127.0.0.1:8000/docs
+cp .env.example .env            # add LLM_API_KEY (any OpenAI-compatible endpoint)
+uvicorn main:app --reload       # http://127.0.0.1:8000/docs
 
-# Frontend (second terminal)
+# Frontend, second terminal
 cd frontend
 npm install
-npm run dev                   # http://localhost:5173
+npm run dev                     # http://localhost:5173 (proxies /api to :8000)
 ```
 
-Without an API key, the bundled sample graph (Financial Crisis Inquiry Report) still loads. Upload and chat return a clear 503 until you add a key.
+Add filings from the **Add** page, or in bulk from the command line:
 
-The LLM is any OpenAI-compatible chat endpoint. It defaults to Sarvam (`gemma4`); set `LLM_BASE_URL` and `LLM_MODEL` to use another provider.
+```bash
+cd backend
+python -m footnote.ingest ~/Downloads/filings/*.pdf
+```
 
-## API
+Download filings by hand from SEBI, NSE Emerge or BSE SME. NSE's terms prohibit automated collection.
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/graphs` | Upload a PDF (`file` form field). Returns `graph_id`, nodes, links and processing `meta` (pages processed, warnings). |
-| `GET` | `/api/graphs/{id}` | Fetch a graph. `demo` is the bundled sample. |
-| `POST` | `/api/graphs/{id}/chat` | `{"message": "...", "node_id": null}` → `reply`, `citations[]`, `focused_node`. |
-| `GET` | `/api/graphs/{id}/analysis` | Hub and bridge nodes, clusters, isolated concepts, plus an AI summary. |
-| `GET` | `/api/health` | Liveness and whether an LLM is configured. |
+### Lead managers with SEBI orders
 
-## Configuration
-
-All settings are environment variables; see [`backend/.env.example`](backend/.env.example). The ones you're most likely to touch:
-
-| Variable | Default | |
-| --- | --- | --- |
-| `SARVAM_API_KEY` | none | Required for upload and chat. |
-| `CORS_ORIGINS` | `localhost:5173` | Comma-separated. Not needed when the backend serves the built frontend. |
-| `MAX_CHUNKS` | `40` | Caps LLM calls (and cost) per upload. |
-| `EXTRACT_WORKERS` | `4` | Parallel LLM calls. Lower it if you hit rate limits. |
+The lead-manager check reads `data/sebi_orders.json`, a hand-checked list. Copy `data/sebi_orders.example.json`, add one entry per order with its SEBI URL, and the flag appears on every filing that banker handled.
 
 ## Tests
 
@@ -75,24 +69,18 @@ All settings are environment variables; see [`backend/.env.example`](backend/.en
 cd backend && pytest
 ```
 
-The suite runs on a fake LLM and hand-built PDFs, so it needs no network or API key. It covers chunking, cross-chunk merging, page attribution, quote verification, retrieval ranking, JSON repair, upload isolation, citations and the store's expiry. CI runs it on Python 3.10 and 3.12, along with the frontend lint and build.
+The suite builds offer documents as real PDFs and runs the whole pipeline on a fake model, so it needs no network or key. It covers table-of-contents parsing and the page offset, amount units, quote verification, PAN redaction, DIN-based matching, every flag rule, cross-filing links, and the API. CI also lints and builds the frontend.
 
-## Limitations
+## Limits
 
-These are known and intentional for now:
-
-- Graphs live in server memory (default: 50 graphs, 6-hour expiry) and are lost on restart.
-- Scanned, image-only PDFs need OCR first.
-- Retrieval is TF-IDF, not embeddings. That's fast and free, but it misses pure paraphrases ("bankrupt" vs "insolvency").
-- Entity merging is name/alias-based. Two different people with the same name will merge.
+- Extraction can miss or misread items. That's why every line links to its page, and unverified quotes are labelled.
+- Scanned (image-only) PDFs need OCR first.
+- People without a DIN in the filing are not linked across filings, on purpose: names collide.
+- Flags describe what the company disclosed. **A flag is a reason to read, not proof of wrongdoing. Not investment advice.**
 
 ## Deploy
 
-One service: the frontend is built into `backend/static` and served by FastAPI. Railway config is included (`railway.json`, `nixpacks.toml`); see [DEPLOYMENT.md](DEPLOYMENT.md) for other options.
-
-## Stack
-
-FastAPI · NetworkX · pypdf · React 19 · Vite · react-force-graph-3d (Three.js)
+One service: the frontend builds into `backend/static` and FastAPI serves both. `railway.json` and `nixpacks.toml` are included. Set `ALLOW_UPLOADS=0` on a public deployment to serve only filings you have already read.
 
 ## License
 

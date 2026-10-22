@@ -1,6 +1,6 @@
-# Contributing to GraphMind
+# Contributing to Footnote
 
-Thank you for your interest in contributing to GraphMind! We welcome contributions from the community. This document provides guidelines and instructions for getting started.
+Thank you for your interest in contributing to Footnote! We welcome contributions from the community. This document provides guidelines and instructions for getting started.
 
 ## 📋 Code of Conduct
 
@@ -40,8 +40,8 @@ Want to suggest a new feature? Open an issue with:
 
 ### 1. Fork & Clone
 ```bash
-git clone https://github.com/prutxvi/GraphMind.git
-cd GraphMind
+git clone https://github.com/prutxvi/Footnote.git
+cd Footnote
 git checkout -b feature/your-feature-name
 ```
 
@@ -217,7 +217,7 @@ We welcome contributions in:
 
 ## 🙏 Thank You
 
-Your contributions make GraphMind better for everyone. Thank you for helping!
+Your contributions make Footnote better for everyone. Thank you for helping!
 
 ---
 
