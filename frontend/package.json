@@ -1,7 +1,7 @@
 {
-  "name": "frontend",
+  "name": "footnote",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,11 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "pdfjs-dist": "^4.10.38",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-force-graph-2d": "^1.29.0",
-    "react-force-graph-3d": "^1.29.0",
-    "react-markdown": "^10.1.0"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
