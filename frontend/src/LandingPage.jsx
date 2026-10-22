@@ -118,11 +118,10 @@ function LandingPage({ onEnter }) {
     const features = [
         { icon: '📄', title: 'PDF Intelligence', desc: 'Upload any document and watch AI extract entities, concepts, and hidden relationships automatically.', gradient: 'linear-gradient(135deg, #667eea, #764ba2)' },
         { icon: '🌐', title: '3D Knowledge Graph', desc: 'Explore interactive 3D force-directed graphs powered by Three.js with real-time physics simulation.', gradient: 'linear-gradient(135deg, #00d2ff, #3a7bd5)' },
-        { icon: '🤖', title: 'Neural Chat', desc: 'Query your knowledge graph with natural language. Get context-aware answers with transparent reasoning.', gradient: 'linear-gradient(135deg, #f093fb, #f5576c)' },
+        { icon: '🤖', title: 'Neural Chat', desc: 'Ask questions in plain language. Answers come from graph facts and source passages, with page citations.', gradient: 'linear-gradient(135deg, #f093fb, #f5576c)' },
         { icon: '🧠', title: 'Graph Analytics', desc: 'AI-powered analysis detecting hub nodes, knowledge clusters, bridge concepts, and hidden patterns.', gradient: 'linear-gradient(135deg, #4facfe, #00f2fe)' },
     ];
 
-    const s = (cond, base, active) => ({ ...base, ...(cond ? active : {}) });
     const reveal = (id, delay = 0) => ({
         opacity: visibleSections[id] ? 1 : 0,
         transform: visibleSections[id] ? 'translateY(0)' : 'translateY(40px)',
@@ -201,7 +200,7 @@ function LandingPage({ onEnter }) {
                     opacity: showContent ? 1 : 0, transform: showContent ? 'translateY(0)' : 'translateY(30px)',
                     transition: 'all 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s',
                 }}>
-                    Upload PDFs. Extract entities & relationships. Explore knowledge in immersive 3D — powered by NVIDIA Nemotron AI.
+                    Upload PDFs. Extract entities & relationships. Explore knowledge in immersive 3D, with every answer cited to a page.
                 </p>
 
                 <div style={{
@@ -236,7 +235,7 @@ function LandingPage({ onEnter }) {
                 }}>
                     <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', letterSpacing: '2.5px', fontWeight: '600', textTransform: 'uppercase' }}>Built With</span>
                     <div style={{ display: 'flex', gap: '40px', alignItems: 'center', opacity: 0.25 }}>
-                        {['React', 'FastAPI', 'Three.js', 'NVIDIA AI', 'NetworkX'].map(t => (
+                        {['React', 'FastAPI', 'Three.js', 'Sarvam AI', 'NetworkX'].map(t => (
                             <span key={t} style={{ fontSize: '14px', color: '#fff', fontWeight: '600', letterSpacing: '0.5px' }}>{t}</span>
                         ))}
                     </div>
@@ -297,7 +296,7 @@ function LandingPage({ onEnter }) {
 
                 {[
                     { n: '01', title: 'Upload Your PDF', desc: 'Drop any document — research papers, textbooks, legal contracts. Our engine reads every page intelligently.', color: '#667eea' },
-                    { n: '02', title: 'AI Extracts Knowledge', desc: 'NVIDIA Nemotron identifies 25-50+ entities, maps relationships, and builds multi-level hierarchies automatically.', color: '#f093fb' },
+                    { n: '02', title: 'AI Extracts Knowledge', desc: 'Every page is read in chunks. Duplicate entities are merged, and each relation keeps a quote verified against the PDF.', color: '#f093fb' },
                     { n: '03', title: 'Explore & Discover', desc: 'Navigate your knowledge in immersive 3D. Chat with AI about connections. Export insights for your work.', color: '#00d2ff' },
                 ].map((item, i) => (
                     <div key={i} id={`step-${i}`} data-reveal style={{

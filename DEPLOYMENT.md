@@ -7,7 +7,7 @@ This guide covers deploying GraphMind to production environments.
 - Server with Python 3.9+ and Node.js 18+
 - Domain name (optional but recommended)
 - SSL certificate (for HTTPS)
-- NVIDIA API key for LLM
+- Sarvam API key (or any OpenAI-compatible endpoint)
 
 ## 📦 Backend Deployment
 
@@ -38,7 +38,7 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 nano .env
-# Add your NVIDIA_API_KEY
+# Add your SARVAM_API_KEY
 ```
 
 #### 5. Create Systemd Service
@@ -93,7 +93,7 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 docker build -t graphmind-backend .
 docker run -d \
   -p 8000:8000 \
-  -e NVIDIA_API_KEY=your_key \
+  -e SARVAM_API_KEY=your_key \
   --name graphmind-backend \
   graphmind-backend
 ```

@@ -1,262 +1,99 @@
-# 🧠 GraphMind: AI-Powered Knowledge Graph Analysis
+# 🧠 GraphMind
 
-**GraphMind** is an intelligent knowledge graph visualization and analysis platform that leverages AI to extract, analyze, and explore complex relationships from unstructured documents.
+**Turn a PDF into a 3D knowledge graph you can question, where every answer is cited back to a page.**
 
-## 🎯 Features
+Upload a report, paper or policy document. GraphMind reads every page, extracts the people, organisations, concepts and events in it, merges duplicates, and draws the result as an interactive 3D graph. Ask a question and the answer comes from graph facts and the source text, with `[S1] · p.12` citations you can click.
 
-- **📊 Interactive 3D Graph Visualization** – Explore knowledge graphs in an immersive 3D environment powered by Three.js
-- **🤖 AI-Powered Entity Extraction** – Automatically extract entities and relationships from PDF documents using NVIDIA Nemotron LLM
-- **💬 Intelligent Chat Interface** – Ask questions about your graph with context-aware AI responses
-- **🔍 Advanced Query System** – Analyze node relationships and connections with natural language queries
-- **🧠 Reasoning Display** – View AI's internal reasoning process for transparency and debugging
-- **⚡ Real-time Updates** – Dynamic graph updates as new data is processed
-
-## 🏗️ Architecture
+## How it works
 
 ```
-GraphMind/
-├── backend/          # FastAPI server & graph processing
-│   ├── main.py      # API endpoints and AI integration
-│   ├── generate_data.py   # Sample data generation
-│   └── data.json    # Knowledge graph data store
-├── frontend/        # React + Vite + Three.js
-│   ├── src/
-│   │   ├── App.jsx  # Main UI component
-│   │   └── main.jsx # Entry point
-│   └── package.json # Frontend dependencies
-└── README.md
+PDF ──► pages ──► page-aware chunks ──► LLM extraction (parallel, per chunk)
+                                              │
+                    merge entities by name + aliases ("Federal Reserve" = "the Fed")
+                    pages per entity = where its name actually appears in the text
+                    each relation keeps a quote, verified verbatim against the PDF
+                                              │
+question ──► TF-IDF over entities + pages ──► facts + passages as numbered sources
+                                              │
+                                    LLM answers citing [S#] ──► page citations
 ```
 
-## 🚀 Quick Start
+What makes it more than "send a PDF to a chatbot":
 
-### Prerequisites
+- **Whole-document extraction.** Every page is processed in ~5,000-character chunks, not just the first few thousand characters. Limits are explicit and reported back (`MAX_PAGES`, `MAX_CHUNKS`).
+- **Entity resolution across chunks.** The same entity mentioned on page 3 and page 40 becomes one node. Only proper-noun aliases are trusted to merge, so a stray "bank" alias can't glue two banks together.
+- **Provenance you can check.** A node's page list comes from searching the text, not from the model. Relation quotes are checked against the source and marked `verified: false` if the model invented them.
+- **Grounded chat.** Answers may only use the numbered sources, and citations to sources that don't exist are dropped.
+- **Per-upload graphs.** Each upload gets its own unguessable ID, so two users never overwrite each other.
 
-- **Python 3.9+**
-- **Node.js 18+**
-- **NVIDIA API Key** (for Nemotron LLM access)
+## Quick start
 
-### Backend Setup
+Requires Python 3.10+ and Node 18+.
 
 ```bash
+# Backend
 cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+cp .env.example .env          # add your SARVAM_API_KEY
+uvicorn main:app --reload     # http://127.0.0.1:8000/docs
 
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Configure environment
-cp .env.example .env
-# Edit .env and add your NVIDIA_API_KEY
-
-# Generate sample data (optional)
-python generate_data.py
-
-# Run the server
-uvicorn main:app --reload
-```
-
-Backend runs on: **http://127.0.0.1:8000**
-
-API Documentation: **http://127.0.0.1:8000/docs**
-
-### Frontend Setup
-
-```bash
+# Frontend (second terminal)
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
+npm run dev                   # http://localhost:5173
 ```
 
-Frontend runs on: **http://localhost:5173**
+Without an API key, the bundled sample graph (Financial Crisis Inquiry Report) still loads. Upload and chat return a clear 503 until you add a key.
 
-## 📡 API Endpoints
+The LLM is any OpenAI-compatible chat endpoint. It defaults to Sarvam (`gemma4`); set `LLM_BASE_URL` and `LLM_MODEL` to use another provider.
 
-### `GET /graph-data`
-Returns the current knowledge graph data.
+## API
 
-```json
-{
-  "nodes": [
-    {"id": "Entity1", "group": "Category", "type": "Type"}
-  ],
-  "links": [
-    {"source": "Entity1", "target": "Entity2", "value": "relationship"}
-  ]
-}
-```
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/graphs` | Upload a PDF (`file` form field). Returns `graph_id`, nodes, links and processing `meta` (pages processed, warnings). |
+| `GET` | `/api/graphs/{id}` | Fetch a graph. `demo` is the bundled sample. |
+| `POST` | `/api/graphs/{id}/chat` | `{"message": "...", "node_id": null}` → `reply`, `citations[]`, `focused_node`. |
+| `GET` | `/api/graphs/{id}/analysis` | Hub and bridge nodes, clusters, isolated concepts, plus an AI summary. |
+| `GET` | `/api/health` | Liveness and whether an LLM is configured. |
 
-### `POST /chat`
-Send a query about the graph with optional node context.
+## Configuration
 
-**Request:**
-```json
-{
-  "message": "What is connected to this node?",
-  "node_id": "Entity1"
-}
-```
+All settings are environment variables; see [`backend/.env.example`](backend/.env.example). The ones you're most likely to touch:
 
-**Response:**
-```json
-{
-  "reply": "Entity1 is connected to Entity2 through a relationship..."
-}
-```
+| Variable | Default | |
+| --- | --- | --- |
+| `SARVAM_API_KEY` | none | Required for upload and chat. |
+| `CORS_ORIGINS` | `localhost:5173` | Comma-separated. Not needed when the backend serves the built frontend. |
+| `MAX_CHUNKS` | `40` | Caps LLM calls (and cost) per upload. |
+| `EXTRACT_WORKERS` | `4` | Parallel LLM calls. Lower it if you hit rate limits. |
 
-### `POST /upload-pdf`
-Extract entities and relationships from a PDF document.
-
-**Request:** Multipart form with `file` field containing PDF
-
-**Response:**
-```json
-{
-  "status": "success",
-  "new_nodes": 15
-}
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-Create a `.env` file in the `backend/` directory:
-
-```env
-NVIDIA_API_KEY=your_nvidia_api_key_here
-```
-
-See `.env.example` for all available options.
-
-## 🛠️ Development
-
-### Running in Development Mode
-
-**Terminal 1 (Backend):**
-```bash
-cd backend
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-uvicorn main:app --reload
-```
-
-**Terminal 2 (Frontend):**
-```bash
-cd frontend
-npm run dev
-```
-
-### Build for Production
-
-**Backend:**
-```bash
-# No build step needed - deploy uvicorn server directly
-```
-
-**Frontend:**
-```bash
-cd frontend
-npm run build
-# Output: frontend/dist/
-```
-
-### Linting & Quality
+## Tests
 
 ```bash
-cd frontend
-npm run lint
+cd backend && pytest
 ```
 
-## 📚 How It Works
+The suite runs on a fake LLM and hand-built PDFs, so it needs no network or API key. It covers chunking, cross-chunk merging, page attribution, quote verification, retrieval ranking, JSON repair, upload isolation, citations and the store's expiry. CI runs it on Python 3.10 and 3.12, along with the frontend lint and build.
 
-1. **PDF Upload** → Extract text from documents
-2. **AI Processing** → Use Nemotron LLM to identify entities and relationships
-3. **Graph Construction** → Build NetworkX graph from extracted data
-4. **Visualization** → Render interactive 3D graph in React
-5. **Query & Analysis** → Chat interface for graph exploration with AI assistance
+## Limitations
 
-## 🔐 Security Considerations
+These are known and intentional for now:
 
-- API CORS is set to allow all origins (`*`) in development. **Restrict this in production.**
-- API keys should never be committed to version control. Use `.env` files.
-- Validate and sanitize all user inputs before processing.
-- Consider rate limiting for production deployments.
+- Graphs live in server memory (default: 50 graphs, 6-hour expiry) and are lost on restart.
+- Scanned, image-only PDFs need OCR first.
+- Retrieval is TF-IDF, not embeddings. That's fast and free, but it misses pure paraphrases ("bankrupt" vs "insolvency").
+- Entity merging is name/alias-based. Two different people with the same name will merge.
 
-## 📦 Dependencies
+## Deploy
 
-### Backend
-- **FastAPI** – Modern Python web framework
-- **NetworkX** – Graph data structures and algorithms
-- **OpenAI SDK** – Integration with Nemotron LLM
-- **pypdf** – PDF text extraction
-- **python-dotenv** – Environment variable management
+One service: the frontend is built into `backend/static` and served by FastAPI. Railway config is included (`railway.json`, `nixpacks.toml`); see [DEPLOYMENT.md](DEPLOYMENT.md) for other options.
 
-### Frontend
-- **React 19** – UI library
-- **Vite** – Build tool
-- **Three.js (via react-force-graph-3d)** – 3D visualization
-- **react-markdown** – Markdown rendering
+## Stack
 
-## 🐛 Troubleshooting
+FastAPI · NetworkX · pypdf · React 19 · Vite · react-force-graph-3d (Three.js)
 
-### PDF Upload Returns "Expecting value: line 1 column 1"
-The AI response may contain non-JSON content like `<think>` tags. The backend now strips these automatically. If the issue persists, check:
-- NVIDIA API key is valid
-- PDF has extractable text (not scanned image-only)
-- Check backend logs for detailed error messages
+## License
 
-### Graph Data Not Loading
-- Ensure backend is running (`http://127.0.0.1:8000/docs`)
-- Check browser console for network errors
-- Verify CORS settings are correct
-
-### 3D Graph Not Rendering
-- Ensure WebGL is supported in your browser
-- Try a different browser (Chrome, Firefox, Edge)
-- Clear browser cache and restart dev server
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-See `CONTRIBUTING.md` for detailed guidelines.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🔗 References
-
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [React Documentation](https://react.dev/)
-- [Three.js Documentation](https://threejs.org/)
-- [NetworkX Documentation](https://networkx.org/)
-- [NVIDIA API Documentation](https://docs.nvidia.com/cloud/nvapicloud/)
-
-## 📞 Support
-
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Check existing issues for solutions
-- Review the troubleshooting section above
-
----
-
-**Made with ❤️ using React, FastAPI, and AI**
+MIT, see [LICENSE](LICENSE).
